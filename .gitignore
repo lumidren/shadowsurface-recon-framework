@@ -1,0 +1,22 @@
+# OS / Environment
+.DS_Store
+Thumbs.db
+*.tmp
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# Scan Reports
+reports/*.json
+reports/*.html
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ShadowSurface EASM Assessment Report - {{ target }}</title>
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #38bdf8;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --success: #10b981;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+        body { background-color: var(--bg-dark); color: var(--text-main); line-height: 1.6; padding: 2rem; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .brand { display: flex; align-items: center; gap: 0.75rem; font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+        .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.875rem; font-weight: 600; }
+        
+        /* Score Cards Grid */
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 0.75rem; padding: 1.5rem; }
+        .card-title { font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .score-val { font-size: 2.5rem; font-weight: 800; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { padding: 0.75rem 1rem; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 0.9rem; }
+        th { background: #0f172a; color: var(--text-muted); }
+        tr:hover { background: rgba(255,255,255,0.02); }
+        
+        /* Badges */
+        .badge-crit { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid #ef4444; }
+        .badge-high { background: rgba(249, 115, 22, 0.2); color: #f97316; border: 1px solid #f97316; }
+        .badge-med { background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid #f59e0b; }
+        .badge-low { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+        
+        .section-title { font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; }
+        .footer { text-align: center; margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.875rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="brand">
+                <span>🛡️ ShadowSurface EASM</span>
+            </div>
+            <div>
+                <span class="badge" style="background: {{ risk.color }}20; color: {{ risk.color }}; border: 1px solid {{ risk.color }}">
+                    Grade: {{ risk.grade }} ({{ risk.risk_level }})
+                </span>
+            </div>
+        </header>
+
+        <!-- Executive Summary Cards -->
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-title">Target Asset</div>
+                <div style="font-size: 1.5rem; font-weight: 700; color: var(--accent);">{{ target }}</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.25rem;">Scan Date: {{ timestamp }}</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Security Posture Score</div>
+                <div class="score-val" style="color: {{ risk.color }}">{{ risk.posture_score }}/100</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Calculated Exposure Index: {{ risk.score }}%</div>
+            </div>
+            <div class="card">
+                <div class="card-title">Findings Breakdown</div>
+                <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+                    <span class="badge badge-crit">{{ risk.counts.critical }} Crit</span>
+                    <span class="badge badge-high">{{ risk.counts.high }} High</span>
+                    <span class="badge badge-med">{{ risk.counts.medium }} Med</span>
+                    <span class="badge badge-low">{{ risk.counts.low }} Low</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 1. Exposed Vulnerabilities & Findings -->
+        <div class="section-title">⚠️ Identified Security Exposure & Findings ({{ risk.counts.total }})</div>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Severity</th>
+                        <th>Category</th>
+                        <th>Issue / Finding</th>
+                        <th>Impact Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in risk.all_findings %}
+                    <tr>
+                        <td>
+                            {% if f.severity == 'Critical' %}<span class="badge badge-crit">Critical</span>
+                            {% elif f.severity == 'High' %}<span class="badge badge-high">High</span>
+                            {% elif f.severity == 'Medium' %}<span class="badge badge-med">Medium</span>
+                            {% else %}<span class="badge badge-low">Low</span>{% endif %}
+                        </td>
+                        <td>{{ f.category }}</td>
+                        <td style="font-weight: 600;">{{ f.title }}</td>
+                        <td style="color: var(--text-muted);">{{ f.impact }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 2. Discovered Services -->
+        <div class="section-title">🌐 Open Ports & Exposed Services ({{ services|length }})</div>
+        <div class="card">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Port</th>
+                        <th>Service</th>
+                        <th>Risk Assessment</th>
+                        <th>Banner / Response</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in services %}
+                    <tr>
+                        <td><strong>{{ s.port }}/TCP</strong></td>
+                        <td>{{ s.service }}</td>
+                        <td>{{ s.risk_tag }}</td>
+                        <td><code>{{ s.banner or 'N/A (Banner Filtered)' }}</code></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-muted);">No standard management or database ports exposed.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 3. Subdomain Inventory -->
+        <div class="section-title">🔍 Discovered Subdomains via Certificate Transparency ({{ subdomains|length }})</div>
+        <div class="card">
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 0;">
+                {% for sub in subdomains %}
+                <span style="background: rgba(56, 189, 248, 0.1); border: 1px solid var(--border-color); padding: 0.35rem 0.75rem; border-radius: 0.375rem; font-size: 0.85rem; font-family: monospace;">
+                    {{ sub }}
+                </span>
+                {% else %}
+                <span style="color: var(--text-muted);">No third-party subdomains identified via public transparency logs.</span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Generated by <strong>ShadowSurface EASM Framework</strong> • Certified Ethical Hacker (CEH) Capstone Project
+        </div>
+    </div>
+</body>
+</html>
