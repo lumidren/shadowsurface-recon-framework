@@ -45,7 +45,7 @@ def main():
 
         risk = results.get("risk_assessment", {})
         print("\n" + "=" * 65)
-        print(f" 📊 ASSESSMENT EXECUTIVE SUMMARY FOR: {domain.upper()}")
+        print(f" [*] ASSESSMENT EXECUTIVE SUMMARY FOR: {domain.upper()}")
         print("=" * 65)
         print(f"  Security Posture Score : {risk.get('posture_score')}/100")
         print(f"  Security Grade         : {risk.get('grade')} ({risk.get('risk_level')})")
